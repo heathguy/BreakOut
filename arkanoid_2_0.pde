@@ -121,6 +121,7 @@ void mousePressed() {
   }
 }
 
+// Main Game Loop
 void draw() {
   if(gamePaused) {
     noLoop();
@@ -346,6 +347,13 @@ ballPoints[7] = P8;
         v.y *= -1;
         // set x velocity to -1.0
         v.x = -1.0;
+        
+        // ************************** TESTING *************************************
+        // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        v.x = returnAngle;
+        v.y *= -1; //reverse the direction
+        // ************************************************************************
 
         // set the ball's velocity
         balls.get(i).setVelocity(v);
@@ -368,6 +376,13 @@ ballPoints[7] = P8;
         // set x velocity to -0.5
         v.x = -0.5;
 
+        // ************************** TESTING *************************************
+        // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        v.x = returnAngle;
+        v.y *= -1; //reverse the direction
+        // ************************************************************************
+
         // set the ball's velocity
         balls.get(i).setVelocity(v);
 
@@ -389,6 +404,13 @@ ballPoints[7] = P8;
         // set x velocity to 0
         v.x += random(-0.5,0.5);
 
+        // ************************** TESTING *************************************
+        // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        v.x = returnAngle;
+        v.y *= -1; //reverse the direction
+        // ************************************************************************
+
         // set the ball's velocity
         balls.get(i).setVelocity(v);
 
@@ -409,6 +431,13 @@ ballPoints[7] = P8;
         v.y *= -1;
         // set x velocity to +0.5
         v.x = 0.5;
+        
+        // ************************** TESTING *************************************
+        // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        v.x = returnAngle;
+        v.y *= -1; //reverse the direction
+        // ************************************************************************
 
         // set the ball's velocity
         balls.get(i).setVelocity(v);
@@ -430,6 +459,13 @@ ballPoints[7] = P8;
         v.y *= -1;
         // set x velocity to +1.0
         v.x = 1.0;
+        
+        // ************************** TESTING *************************************
+        // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        v.x = returnAngle;
+        v.y *= -1; //reverse the direction
+        // ************************************************************************
 
         // set the ball's velocity
         balls.get(i).setVelocity(v);
