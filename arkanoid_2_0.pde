@@ -1,3 +1,6 @@
+boolean DEBUG = true;
+
+// Create some level arrays
 int[][] levelOne = new int[][]{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -28,12 +31,10 @@ ArrayList<Ball> balls = new ArrayList<Ball>();
 ArrayList<Brick> bricks = new ArrayList<Brick>();
 ArrayList<PowerUp> powerups = new ArrayList<PowerUp>();
 
-Ball ball1;
-float initalBallSpeed = 3;
+Ball ball;
+float initalBallSpeed;
 
 Paddle paddle;
-
-boolean DEBUG = true;
 
 PVector paddleLoc;
 PVector brickLoc;
@@ -43,16 +44,16 @@ PVector lifeCounter = new PVector((width-200),20);
 float paddleWidth;
 PVector[] paddleHitBoxes;
 
-boolean gamePaused = true;
+boolean gamePaused;
+boolean gameOver;
 
-boolean gameOver = false;
 int livesRemaining;
 int BRICK_SCORE_VALUE = 100;
 int POWERUP_SCORE_VALUE = 1000;
-int SCORE_MULTIPLIER = 1;
-int gameScore = 0;
+int SCORE_MULTIPLIER;
+int gameScore;
 
-int powerSpawnPercent = 100;
+int powerSpawnPercent;
 
 boolean hitBrick = false;
 boolean hitPaddle = false;
@@ -65,16 +66,18 @@ void setup() {
   size(640, 480);
   paddle = new Paddle();
   
-  ball1 = new Ball(paddle.location.x+(paddle.paddleWidth/2), paddle.location.y-7, 0, -3);
-  balls.add(ball1);
-  //ball2 = new Ball();
-  //balls.add(ball2);
-  //ball3 = new Ball();
-  //balls.add(ball3);
+  ball = new Ball(paddle.location.x+(paddle.paddleWidth/2), paddle.location.y-7, 0, -3);
+  balls.add(ball);
   
   //paddle.setPaddleHitBoxes();
   
   livesRemaining = 3;
+  initalBallSpeed = 3;
+  
+  SCORE_MULTIPLIER = 1;
+  gameScore = 0;
+  
+  powerSpawnPercent = 0;
 
   //setup the brick array list using the level array. define a starting x,y for the first brick and add to it every time a brick is 'placed' in the array list
 //add a value to the brick constructor to indicate if the brick is indestructible, check this value on 'hit'
@@ -104,7 +107,11 @@ void setup() {
   mouseX = width/2;
   mouseY = height;
   gamePaused = true;
-  noCursor();
+  gameOver = false;
+  
+  if(!DEBUG) {
+    noCursor();
+  }
   
   paddleImg = loadImage("images/bar.png");
   
@@ -191,6 +198,72 @@ PVector P7 = new PVector( tempBall.location.x-tempBall.radius, tempBall.location
 ballPoints[6] = P7;
 PVector P8 = new PVector( (tempBall.location.x + (tempBall.radius*cos(315) * -1)), (tempBall.location.y + tempBall.radius*sin(315)) );
 ballPoints[7] = P8;
+
+
+//check collision with board sides {
+    if(tempBall.location.x+tempBall.radius >= width || tempBall.location.x-tempBall.radius <= 0) {
+        if(DEBUG) {
+            print("Hit wall\n");
+        }
+
+        // get current ball's velocity
+        PVector v = balls.get(i).getVelocity();
+
+        // reverse the x velocity
+        v.x *= -1;
+
+        // set the ball's velocity
+        balls.get(i).setVelocity(v);
+        //break;
+    }
+    //check collision with board top {
+    //Adjust for height 50px or more for the score section
+    if(tempBall.location.y-tempBall.radius <= scoreBoardHeight) {
+        if(DEBUG) {
+          print("Hit ceiling\n");
+        }
+
+        // get current ball's velocity
+        PVector v = balls.get(i).getVelocity();
+
+        // reverse the y velocity
+        v.y *= -1;
+
+        // set the ball's velocity
+        balls.get(i).setVelocity(v);
+        //break;
+    }
+    //check collision with board bottom
+    if(tempBall.location.y+tempBall.radius >= paddle.location.y+(paddle.paddleHeight)) {
+        if(DEBUG) {
+          print("Hit void\n");
+        }
+        //decrease number of balls remaining
+        balls.remove(i);
+        if(balls.size() > 0) {
+          
+        }
+        else {
+          livesRemaining--;
+
+          if(livesRemaining > 0)  {
+              Ball ball = new Ball(paddle.location.x+(paddle.paddleWidth/2), paddle.location.y-7, 0, -3);
+              //ball.resetBall();
+              balls.add(ball);
+              gamePaused = true;
+          }
+          else {
+              // draw 'GAME OVER' in red on the screen
+              textSize(48);
+              fill(50,100,150);
+              text(str(gameScore), ((width/2)-48),((height/2)-50));
+              fill(220,10,10);
+              text("GAME OVER", ((width/2)-48), height/2);
+              noLoop();
+          }
+        }
+        break;
+    }
 
 //for(int bP = 0; bP < ballPoints.length; bP++) {
     //tempBall.location.x = floor(ballPoints[bP].x);
@@ -333,7 +406,7 @@ ballPoints[7] = P8;
     float middleEndRange = paddle.location.x + (paddleWidth * .60);
     float rightEndRange = paddle.location.x + (paddleWidth * .85);
     // far left
-    if( (tempBall.location.x >= paddle.location.x) && (tempBall.location.x <= farLeftEndRange) && (tempBall.location.y >= paddle.location.y) ) {
+    if( (tempBall.location.x >= paddle.location.x) && (tempBall.location.x <= farLeftEndRange) && (tempBall.location.y+tempBall.radius >= paddle.location.y) ) {
         if(DEBUG) {
             print("Hit far left paddle\n");
             print("Ball Loc: " + tempBall.location.x + ", " + tempBall.location.y + "\n");
@@ -344,13 +417,14 @@ ballPoints[7] = P8;
         PVector v = balls.get(i).getVelocity();
 
         // reverse the y velocity
-        v.y *= -1;
+        //v.y *= -1;
         // set x velocity to -1.0
-        v.x = -1.0;
+        //v.x = -1.0;
         
         // ************************** TESTING *************************************
         // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
-        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-135), radians(135)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        //println("Return Angle: "+returnAngle);
         v.x = returnAngle;
         v.y *= -1; //reverse the direction
         // ************************************************************************
@@ -361,7 +435,7 @@ ballPoints[7] = P8;
         hitPaddle = true;
     }
     // left
-    if( (tempBall.location.x > farLeftEndRange) && (tempBall.location.x <= leftEndRange) && (tempBall.location.y >= paddle.location.y) ) {
+    if( (tempBall.location.x > farLeftEndRange) && (tempBall.location.x <= leftEndRange) && (tempBall.location.y+tempBall.radius >= paddle.location.y) ) {
         if(DEBUG) {
             print("Hit left paddle\n");
             print("Ball Loc: " + tempBall.location.x + ", " + tempBall.location.y + "\n");
@@ -372,13 +446,13 @@ ballPoints[7] = P8;
         PVector v = balls.get(i).getVelocity();
 
         // reverse the y velocity
-        v.y *= -1;
+        //v.y *= -1;
         // set x velocity to -0.5
-        v.x = -0.5;
+        //v.x = -0.5;
 
         // ************************** TESTING *************************************
         // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
-        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-135), radians(135)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
         v.x = returnAngle;
         v.y *= -1; //reverse the direction
         // ************************************************************************
@@ -389,7 +463,7 @@ ballPoints[7] = P8;
         hitPaddle = true;
     }
     // middle
-    if( (tempBall.location.x > leftEndRange) && (tempBall.location.x <= middleEndRange) && (tempBall.location.y >= paddle.location.y) ) {
+    if( (tempBall.location.x > leftEndRange) && (tempBall.location.x <= middleEndRange) && (tempBall.location.y+tempBall.radius >= paddle.location.y) ) {
         if(DEBUG) {
             print("Hit middle paddle\n");
             print("Ball Loc: " + tempBall.location.x + ", " + tempBall.location.y + "\n");
@@ -400,13 +474,13 @@ ballPoints[7] = P8;
         PVector v = balls.get(i).getVelocity();
 
         // reverse the y velocity
-        v.y *= -1;
+        //v.y *= -1;
         // set x velocity to 0
-        v.x += random(-0.5,0.5);
+        //v.x += random(-0.5,0.5);
 
         // ************************** TESTING *************************************
         // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
-        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-135), radians(135)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
         v.x = returnAngle;
         v.y *= -1; //reverse the direction
         // ************************************************************************
@@ -417,7 +491,7 @@ ballPoints[7] = P8;
         hitPaddle = true;
     }
     // right
-    if( (tempBall.location.x > middleEndRange) && (tempBall.location.x <= rightEndRange) && (tempBall.location.y >= paddle.location.y) ) {
+    if( (tempBall.location.x > middleEndRange) && (tempBall.location.x <= rightEndRange) && (tempBall.location.y+tempBall.radius >= paddle.location.y) ) {
         if(DEBUG) {
             print("Hit right paddle\n");
             print("Ball Loc: " + tempBall.location.x + ", " + tempBall.location.y + "\n");
@@ -428,13 +502,13 @@ ballPoints[7] = P8;
         PVector v = balls.get(i).getVelocity();
 
         // reverse the y velocity
-        v.y *= -1;
+        //v.y *= -1;
         // set x velocity to +0.5
-        v.x = 0.5;
+        //v.x = 0.5;
         
         // ************************** TESTING *************************************
         // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
-        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-135), radians(135)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
         v.x = returnAngle;
         v.y *= -1; //reverse the direction
         // ************************************************************************
@@ -445,7 +519,7 @@ ballPoints[7] = P8;
         hitPaddle = true;
     }
     // far right
-    if( (tempBall.location.x > rightEndRange) && (tempBall.location.x <= (paddle.location.x + paddleWidth)) && (tempBall.location.y >= paddle.location.y) ) {
+    if( (tempBall.location.x > rightEndRange) && (tempBall.location.x <= (paddle.location.x + paddleWidth)) && (tempBall.location.y+tempBall.radius >= paddle.location.y) ) {
         if(DEBUG) {
             print("Hit far right paddle\n");
             print("Ball Loc: " + tempBall.location.x + ", " + tempBall.location.y + "\n");
@@ -456,13 +530,13 @@ ballPoints[7] = P8;
         PVector v = balls.get(i).getVelocity();
 
         // reverse the y velocity
-        v.y *= -1;
+        //v.y *= -1;
         // set x velocity to +1.0
-        v.x = 1.0;
+        //v.x = 1.0;
         
         // ************************** TESTING *************************************
         // IF THIS WORKS, REFACTOR ALL BALL/PADDLE CODE
-        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-45), radians(45)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
+        float returnAngle = map(tempBall.location.x, paddle.location.x, paddle.location.x + paddleWidth, radians(-135), radians(135)); // return an angle based on the ball location and paddle location mapped between -45 degrees and 45 degrees. Use this value to change the ball velocity
         v.x = returnAngle;
         v.y *= -1; //reverse the direction
         // ************************************************************************
@@ -491,69 +565,7 @@ ballPoints[7] = P8;
     }
     //} end paddle collision check
     
-    //check collision with board sides {
-    if(tempBall.location.x+tempBall.radius >= width || tempBall.location.x-tempBall.radius <= 0) {
-        if(DEBUG) {
-            print("Hit wall\n");
-        }
-
-        // get current ball's velocity
-        PVector v = balls.get(i).getVelocity();
-
-        // reverse the x velocity
-        v.x *= -1;
-
-        // set the ball's velocity
-        balls.get(i).setVelocity(v);
-        //break;
-    }
-    //check collision with board top {
-    //Adjust for height 50px or more for the score section
-    if(tempBall.location.y-tempBall.radius <= scoreBoardHeight) {
-        if(DEBUG) {
-          print("Hit ceiling\n");
-        }
-
-        // get current ball's velocity
-        PVector v = balls.get(i).getVelocity();
-
-        // reverse the y velocity
-        v.y *= -1;
-
-        // set the ball's velocity
-        balls.get(i).setVelocity(v);
-        //break;
-    }
-    //check collision with board bottom
-    if(tempBall.location.y >= height) {
-        if(DEBUG) {
-          print("Hit void\n");
-        }
-        //decrease number of balls remaining
-        balls.remove(i);
-        if(balls.size() > 0) {
-          
-        }
-        else {
-          livesRemaining--;
-
-          if(livesRemaining > 0)  {
-              Ball ball = new Ball(paddle.location.x+(paddle.paddleWidth/2), paddle.location.y-7, 0, -3);
-              //ball.resetBall();
-              balls.add(ball);
-              gamePaused = true;
-          }
-          else {
-              // draw 'GAME OVER' in red on the screen
-              textSize(48);
-              fill(50,100,150);
-              text(str(gameScore), ((width/2)-48),((height/2)-50));
-              fill(220,10,10);
-              text("GAME OVER", ((width/2)-48), height/2);
-              noLoop();
-          }
-        }
-    }
+    
   //}// end ball points
 } // end ball in ball array
 
