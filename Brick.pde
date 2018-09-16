@@ -1,13 +1,15 @@
 class Brick {
   PVector location = new PVector();
   color brickColor;
-  float brickHeight = 20;
-  float brickWidth = 40;
+  float brickHeight;
+  float brickWidth;
   int life = 1;
   
-  Brick(float locx, float locy, color c, int lifeAmt) {
+  Brick(float locx, float locy, color c, float w, float h, int lifeAmt) {
     location.x = locx;
     location.y = locy;
+    brickWidth = w;
+    brickHeight = h;
     brickColor = c;
     life = lifeAmt;
   }
