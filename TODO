@@ -1,9 +1,8 @@
-1.  Change the ball / paddle interaction based on info in Evernote notes
-2.  Move the hit detection tests into the respective classes
+1.  Move the hit detection tests into the respective classes
   e.g in the main loop:
     for each ball {
       ball.velocity = ball.checkPaddle()
       ball.velocity = ball.checkBrick()
       ball.velocity = ball.checkEdges()
       }
-3.  Implement other powerups
+2.  Implement other powerups
